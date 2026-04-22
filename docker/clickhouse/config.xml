@@ -1,0 +1,20 @@
+<clickhouse>
+    <logger>
+        <level>warning</level>
+        <console>true</console>
+    </logger>
+
+    <max_connections>1000</max_connections>
+    <max_concurrent_queries>100</max_concurrent_queries>
+    <max_server_memory_usage_to_ram_ratio>0.6</max_server_memory_usage_to_ram_ratio>
+
+    <!-- Allow longer queries for forensic analytics -->
+    <max_execution_time>120</max_execution_time>
+    <max_query_size>1073741824</max_query_size>
+
+    <!-- Async inserts for high-throughput ingest -->
+    <async_insert>1</async_insert>
+    <async_insert_threads>4</async_insert_threads>
+    <async_insert_max_data_size>104857600</async_insert_max_data_size>
+    <async_insert_busy_timeout_ms>200</async_insert_busy_timeout_ms>
+</clickhouse>

@@ -1,0 +1,232 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────
+# DeepTrace Production Stack
+# Starts: Neo4j · ClickHouse · Kafka · Zookeeper · Redis · Collector
+# ─────────────────────────────────────────────────────────────
+
+x-restart: &restart
+  restart: unless-stopped
+
+x-logging: &logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "20m"
+      max-file: "5"
+
+networks:
+  deeptrace:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+
+volumes:
+  neo4j_data:
+  neo4j_logs:
+  clickhouse_data:
+  kafka_data:
+  zookeeper_data:
+  redis_data:
+
+services:
+
+  # ── Zookeeper (Kafka coordinator) ─────────────────────────
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    <<: [*restart, *logging]
+    networks: [deeptrace]
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Kafka ─────────────────────────────────────────────────
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    <<: [*restart, *logging]
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    networks: [deeptrace]
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 168      # 7 days
+      KAFKA_LOG_SEGMENT_BYTES: 104857600  # 100MB
+      KAFKA_NUM_PARTITIONS: 4
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:29092", "--list"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ── Kafka topic bootstrap ─────────────────────────────────
+  kafka-init:
+    image: confluentinc/cp-kafka:7.6.1
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks: [deeptrace]
+    entrypoint: ["/bin/sh", "-c"]
+    command: |
+      "
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists \
+        --topic deeptrace-spans --partitions 4 --replication-factor 1 \
+        --config retention.ms=604800000
+
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists \
+        --topic deeptrace-commands --partitions 1 --replication-factor 1
+
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists \
+        --topic deeptrace-alerts --partitions 2 --replication-factor 1
+
+      echo 'Kafka topics created.'
+      "
+
+  # ── Neo4j (Graph DB) ─────────────────────────────────────
+  neo4j:
+    image: neo4j:5.19-community
+    <<: [*restart, *logging]
+    networks: [deeptrace]
+    ports:
+      - "7474:7474"   # Browser UI
+      - "7687:7687"   # Bolt
+    environment:
+      NEO4J_AUTH: neo4j/deeptrace
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_apoc_export_file_enabled: "true"
+      NEO4J_apoc_import_file_enabled: "true"
+      NEO4J_dbms_memory_heap_initial__size: "256m"
+      NEO4J_dbms_memory_heap_max__size: "1g"
+      NEO4J_dbms_memory_pagecache_size: "256m"
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:7474"]
+      interval: 15s
+      timeout: 10s
+      retries: 8
+      start_period: 45s
+
+  # ── ClickHouse (Time-Series Analytics) ───────────────────
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.4
+    <<: [*restart, *logging]
+    networks: [deeptrace]
+    ports:
+      - "8123:8123"   # HTTP
+      - "9000:9000"   # Native TCP
+    environment:
+      CLICKHOUSE_DB: deeptrace
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./docker/clickhouse/config.xml:/etc/clickhouse-server/config.d/custom.xml:ro
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ── Redis (Pub/Sub + Command Bus) ────────────────────────
+  redis:
+    image: redis:7.2-alpine
+    <<: [*restart, *logging]
+    networks: [deeptrace]
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --save 60 1000
+      --loglevel warning
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ── DeepTrace Collector (FastAPI) ────────────────────────
+  collector:
+    build:
+      context: ../collector
+      dockerfile: ../docker/Dockerfile.collector
+    <<: [*restart, *logging]
+    depends_on:
+      neo4j:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks: [deeptrace]
+    ports:
+      - "8080:8080"
+    environment:
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: deeptrace
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_PORT: "9000"
+      CLICKHOUSE_DB: deeptrace
+      KAFKA_BROKERS: kafka:29092
+      REDIS_URL: redis://redis:6379
+      DEEPTRACE_ENV: production
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.collector.rule=Host(`api.deeptrace.local`)"
+
+  # ── DeepTrace Frontend (Nginx) ───────────────────────────
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    <<: [*restart, *logging]
+    depends_on:
+      collector:
+        condition: service_healthy
+    networks: [deeptrace]
+    ports:
+      - "3000:80"
+    environment:
+      VITE_API_URL: http://localhost:8080
+      VITE_WS_URL: ws://localhost:8080
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`deeptrace.local`)"

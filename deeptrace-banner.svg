@@ -1,0 +1,375 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 220" width="900" height="220">
+  <defs>
+
+    <!-- Deep space background gradient -->
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="#050911"/>
+      <stop offset="50%"  stop-color="#080f1a"/>
+      <stop offset="100%" stop-color="#030710"/>
+    </linearGradient>
+
+    <!-- Cyan glow pulse for the live dot -->
+    <radialGradient id="liveglow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#00e5a0" stop-opacity="0.9"/>
+      <stop offset="60%" stop-color="#00e5a0" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#00e5a0" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Node core gradient -->
+    <radialGradient id="nodecore" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#0d2a3d"/>
+      <stop offset="100%" stop-color="#050d16"/>
+    </radialGradient>
+
+    <!-- Planner node (cyan) -->
+    <radialGradient id="ng0" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#00d4ff" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#00d4ff" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Scanner node (green) -->
+    <radialGradient id="ng1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#00e5a0" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#00e5a0" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Anomaly node (purple) -->
+    <radialGradient id="ng2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#9b6dff" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#9b6dff" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- DB node (pink) -->
+    <radialGradient id="ng3" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#ff6b9d" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#ff6b9d" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Patcher node (amber) -->
+    <radialGradient id="ng4" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#ffb347" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#ffb347" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Edge pulse gradient for animated line -->
+    <linearGradient id="edgepulse" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#00e5a0" stop-opacity="0"/>
+      <stop offset="50%"  stop-color="#00e5a0" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#00e5a0" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Clip to banner bounds -->
+    <clipPath id="clip">
+      <rect width="900" height="220"/>
+    </clipPath>
+
+  </defs>
+
+  <!-- ── BACKGROUND ─────────────────────────────── -->
+  <rect width="900" height="220" fill="url(#bg)"/>
+
+  <!-- Subtle grid -->
+  <g opacity="0.045" clip-path="url(#clip)">
+    <!-- vertical lines -->
+    <line x1="60"  y1="0" x2="60"  y2="220" stroke="#00d4ff" stroke-width="0.5"/>
+    <line x1="120" y1="0" x2="120" y2="220" stroke="#00d4ff" stroke-width="0.5"/>
+    <line x1="180" y1="0" x2="180" y2="220" stroke="#00d4ff" stroke-width="0.5"/>
+    <line x1="240" y1="0" x2="240" y2="220" stroke="#00d4ff" stroke-width="0.5"/>
+    <line x1="300" y1="0" x2="300" y2="220" stroke="#00d4ff" stroke-width="0.5"/>
+    <line x1="360" y1="0" x2="360" y2="220" stroke="#00d4ff" stroke-width="0.5"/>
+    <line x1="420" y1="0" x2="420" y2="220" stroke="#00d4ff" stroke-width="0.5"/>
+    <line x1="480" y1="0" x2="480" y2="220" stroke="#00d4ff" stroke-width="0.5"/>
+    <line x1="540" y1="0" x2="540" y2="220" stroke="#00d4ff" stroke-width="0.5"/>
+    <line x1="600" y1="0" x2="600" y2="220" stroke="#00d4ff" stroke-width="0.5"/>
+    <line x1="660" y1="0" x2="660" y2="220" stroke="#00d4ff" stroke-width="0.5"/>
+    <line x1="720" y1="0" x2="720" y2="220" stroke="#00d4ff" stroke-width="0.5"/>
+    <line x1="780" y1="0" x2="780" y2="220" stroke="#00d4ff" stroke-width="0.5"/>
+    <line x1="840" y1="0" x2="840" y2="220" stroke="#00d4ff" stroke-width="0.5"/>
+    <!-- horizontal lines -->
+    <line x1="0" y1="44"  x2="900" y2="44"  stroke="#00d4ff" stroke-width="0.5"/>
+    <line x1="0" y1="88"  x2="900" y2="88"  stroke="#00d4ff" stroke-width="0.5"/>
+    <line x1="0" y1="132" x2="900" y2="132" stroke="#00d4ff" stroke-width="0.5"/>
+    <line x1="0" y1="176" x2="900" y2="176" stroke="#00d4ff" stroke-width="0.5"/>
+  </g>
+
+  <!-- ── TOPOLOGY GRAPH (right side) ───────────────── -->
+  <g clip-path="url(#clip)">
+
+    <!--
+      Node layout (right half):
+        Planner   P  (600, 110)  — cyan   — orchestrator
+        Scanner   S  (700,  62)  — green  — file scanner
+        Auditor   A  (720, 155)  — green  — code auditor
+        Reporter  R  (800,  88)  — purple — anomaly agent
+        Patcher   T  (810, 155)  — amber  — patch generator
+        DB        D  (870, 110)  — pink   — system resource
+    -->
+
+    <!-- ── EDGES (drawn before nodes so nodes sit on top) ── -->
+
+    <!-- P → S  green, fast -->
+    <line x1="613" y1="102" x2="686" y2="70"
+          stroke="#00e5a0" stroke-width="1" stroke-opacity="0.45"/>
+
+    <!-- P → A  green, fast -->
+    <line x1="613" y1="118" x2="706" y2="148"
+          stroke="#00e5a0" stroke-width="1" stroke-opacity="0.45"/>
+
+    <!-- P → R  amber, slower -->
+    <line x1="617" y1="107" x2="787" y2="91"
+          stroke="#ffb347" stroke-width="1" stroke-opacity="0.5"/>
+
+    <!-- P → T  green -->
+    <line x1="614" y1="116" x2="796" y2="150"
+          stroke="#00e5a0" stroke-width="0.8" stroke-opacity="0.35"/>
+
+    <!-- S → DB  green -->
+    <line x1="714" y1="65" x2="856" y2="105"
+          stroke="#00e5a0" stroke-width="0.8" stroke-opacity="0.3"/>
+
+    <!-- A → DB  green -->
+    <line x1="732" y1="150" x2="856" y2="115"
+          stroke="#00e5a0" stroke-width="0.8" stroke-opacity="0.3"/>
+
+    <!-- R → DB  RED — blocked -->
+    <line x1="815" y1="93" x2="856" y2="107"
+          stroke="#ff4560" stroke-width="1.2" stroke-opacity="0.7"
+          stroke-dasharray="4,3"/>
+
+    <!-- A → T  findings -->
+    <line x1="736" y1="158" x2="796" y2="158"
+          stroke="#00d4ff" stroke-width="0.8" stroke-opacity="0.35"/>
+
+    <!-- Animated pulse on P → S edge -->
+    <line x1="613" y1="102" x2="686" y2="70"
+          stroke="url(#edgepulse)" stroke-width="2" stroke-opacity="0.7">
+      <animate attributeName="stroke-dashoffset" from="0" to="-80"
+               dur="2s" repeatCount="indefinite"/>
+    </line>
+
+    <!-- ── NODE GLOWS ── -->
+    <!-- Planner glow -->
+    <circle cx="600" cy="110" r="34" fill="url(#ng0)"/>
+    <!-- Scanner glow -->
+    <circle cx="700" cy="62"  r="26" fill="url(#ng1)"/>
+    <!-- Auditor glow -->
+    <circle cx="720" cy="155" r="26" fill="url(#ng1)"/>
+    <!-- Reporter glow — anomaly purple, larger -->
+    <circle cx="800" cy="88"  r="32" fill="url(#ng2)"/>
+    <!-- Patcher glow -->
+    <circle cx="810" cy="155" r="22" fill="url(#ng4)"/>
+    <!-- DB glow -->
+    <circle cx="866" cy="110" r="24" fill="url(#ng3)"/>
+
+    <!-- ── NODE BODIES ── -->
+
+    <!-- Planner (largest — orchestrator) -->
+    <circle cx="600" cy="110" r="22" fill="url(#nodecore)"
+            stroke="#00d4ff" stroke-width="1.5" stroke-opacity="0.9"/>
+    <!-- Token ring arc — ~70% full, cyan -->
+    <circle cx="600" cy="110" r="27"
+            fill="none" stroke="#00d4ff" stroke-width="2" stroke-opacity="0.7"
+            stroke-dasharray="119 51"
+            stroke-dashoffset="0"
+            transform="rotate(-90 600 110)"/>
+    <text x="600" y="115" text-anchor="middle"
+          font-family="monospace" font-size="9" font-weight="700"
+          fill="#00d4ff" letter-spacing="0.5">PL</text>
+
+    <!-- Scanner -->
+    <circle cx="700" cy="62" r="16" fill="url(#nodecore)"
+            stroke="#00e5a0" stroke-width="1.4" stroke-opacity="0.9"/>
+    <circle cx="700" cy="62" r="20"
+            fill="none" stroke="#00e5a0" stroke-width="1.5" stroke-opacity="0.6"
+            stroke-dasharray="94 32" stroke-dashoffset="0"
+            transform="rotate(-90 700 62)"/>
+    <text x="700" y="66" text-anchor="middle"
+          font-family="monospace" font-size="8" font-weight="700"
+          fill="#00e5a0">SC</text>
+
+    <!-- Auditor -->
+    <circle cx="720" cy="155" r="15" fill="url(#nodecore)"
+            stroke="#00e5a0" stroke-width="1.3" stroke-opacity="0.85"/>
+    <circle cx="720" cy="155" r="19"
+            fill="none" stroke="#00e5a0" stroke-width="1.5" stroke-opacity="0.5"
+            stroke-dasharray="60 60" stroke-dashoffset="0"
+            transform="rotate(-90 720 155)"/>
+    <text x="720" y="159" text-anchor="middle"
+          font-family="monospace" font-size="8" font-weight="700"
+          fill="#00e5a0">AU</text>
+
+    <!-- Reporter — anomaly, purple, pulsing ring -->
+    <circle cx="800" cy="88" r="19" fill="url(#nodecore)"
+            stroke="#9b6dff" stroke-width="1.8" stroke-opacity="1"/>
+    <!-- Animated outer ring pulse -->
+    <circle cx="800" cy="88" r="25"
+            fill="none" stroke="#9b6dff" stroke-width="1" stroke-opacity="0.5">
+      <animate attributeName="r" values="24;28;24" dur="2.4s" repeatCount="indefinite"/>
+      <animate attributeName="stroke-opacity" values="0.5;0.1;0.5" dur="2.4s" repeatCount="indefinite"/>
+    </circle>
+    <!-- Status dot — red error blink -->
+    <circle cx="813" cy="75" r="4" fill="#ff4560">
+      <animate attributeName="opacity" values="1;0.2;1" dur="0.9s" repeatCount="indefinite"/>
+    </circle>
+    <text x="800" y="93" text-anchor="middle"
+          font-family="monospace" font-size="8" font-weight="700"
+          fill="#9b6dff">RP</text>
+
+    <!-- Patcher -->
+    <circle cx="810" cy="155" r="14" fill="url(#nodecore)"
+            stroke="#ffb347" stroke-width="1.3" stroke-opacity="0.85"/>
+    <circle cx="810" cy="155" r="18"
+            fill="none" stroke="#ffb347" stroke-width="1.5" stroke-opacity="0.5"
+            stroke-dasharray="45 68" stroke-dashoffset="0"
+            transform="rotate(-90 810 155)"/>
+    <text x="810" y="159" text-anchor="middle"
+          font-family="monospace" font-size="8" font-weight="700"
+          fill="#ffb347">PT</text>
+
+    <!-- DB — system resource (hexagonal silhouette via two stacked rects) -->
+    <rect x="853" y="96" width="26" height="28" rx="4"
+          fill="url(#nodecore)" stroke="#ff6b9d" stroke-width="1.3" stroke-opacity="0.85"/>
+    <rect x="853" y="96" width="26" height="7" rx="4"
+          fill="none" stroke="#ff6b9d" stroke-width="1" stroke-opacity="0.5"/>
+    <text x="866" y="114" text-anchor="middle"
+          font-family="monospace" font-size="7" font-weight="700"
+          fill="#ff6b9d">DB</text>
+
+    <!-- Status dots -->
+    <circle cx="617" cy="92" r="3.5" fill="#00d4ff"/>
+    <circle cx="713" cy="49" r="3"   fill="#00e5a0"/>
+    <circle cx="732" cy="143" r="3"  fill="#00e5a0"/>
+    <circle cx="821" cy="142" r="3"  fill="#ffb347"/>
+
+    <!-- Node labels -->
+    <text x="600" y="140" text-anchor="middle"
+          font-family="monospace" font-size="8" fill="#4d6a82">Planner</text>
+    <text x="700" y="85" text-anchor="middle"
+          font-family="monospace" font-size="8" fill="#4d6a82">Scanner</text>
+    <text x="720" y="177" text-anchor="middle"
+          font-family="monospace" font-size="8" fill="#4d6a82">Auditor</text>
+    <text x="800" y="116" text-anchor="middle"
+          font-family="monospace" font-size="8" fill="#7a5ccc">Reporter</text>
+    <text x="810" y="176" text-anchor="middle"
+          font-family="monospace" font-size="8" fill="#4d6a82">Patcher</text>
+    <text x="866" y="135" text-anchor="middle"
+          font-family="monospace" font-size="8" fill="#4d6a82">DB</text>
+
+    <!-- Faint vertical divider between graph and text -->
+    <line x1="570" y1="20" x2="570" y2="200"
+          stroke="#0d2a3d" stroke-width="1" stroke-opacity="0.8"/>
+    <line x1="571" y1="20" x2="571" y2="200"
+          stroke="#00d4ff" stroke-width="0.5" stroke-opacity="0.12"/>
+
+  </g>
+
+  <!-- ── LEFT SIDE: WORDMARK + TAGLINE + BADGES ──── -->
+
+  <!-- Live pulse dot -->
+  <circle cx="46" cy="52" r="18" fill="url(#liveglow)" opacity="0.6">
+    <animate attributeName="r" values="14;20;14" dur="2.8s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.6;0.2;0.6" dur="2.8s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="46" cy="52" r="6" fill="#00e5a0"/>
+  <circle cx="46" cy="52" r="3" fill="#e8f0f8"/>
+
+  <!-- Wordmark: DEEP -->
+  <text x="70" y="64"
+        font-family="'Arial Black', 'Arial Bold', Arial, sans-serif"
+        font-size="38" font-weight="900" letter-spacing="2"
+        fill="#e8f0f8">DEEP</text>
+
+  <!-- Wordmark: TRACE in cyan -->
+  <text x="200" y="64"
+        font-family="'Arial Black', 'Arial Bold', Arial, sans-serif"
+        font-size="38" font-weight="900" letter-spacing="2"
+        fill="#00d4ff">TRACE</text>
+
+  <!-- Version badge -->
+  <rect x="70" y="74" width="44" height="16" rx="3"
+        fill="#0d2a3d" stroke="#1e2d3d" stroke-width="0.5"/>
+  <text x="92" y="86" text-anchor="middle"
+        font-family="monospace" font-size="9" font-weight="700"
+        fill="#4d6a82" letter-spacing="0.5">v2.1.0</text>
+
+  <!-- Tagline -->
+  <text x="70" y="112"
+        font-family="monospace" font-size="13" font-weight="400"
+        fill="#8ba8c4" letter-spacing="0.3">LLM Service Mesh</text>
+  <text x="70" y="131"
+        font-family="monospace" font-size="13" font-weight="400"
+        fill="#8ba8c4" letter-spacing="0.3">&#38; Agent Observability</text>
+
+  <!-- Capability badges row 1 -->
+  <g transform="translate(70, 148)">
+
+    <!-- Live Topology -->
+    <rect x="0" y="0" width="108" height="20" rx="3"
+          fill="#061420" stroke="#00e5a050" stroke-width="0.8"/>
+    <circle cx="11" cy="10" r="3.5" fill="#00e5a0"/>
+    <text x="20" y="14"
+          font-family="monospace" font-size="9" fill="#8ba8c4">Live Topology</text>
+
+    <!-- Zero-Trust -->
+    <rect x="116" y="0" width="100" height="20" rx="3"
+          fill="#061420" stroke="#9b6dff50" stroke-width="0.8"/>
+    <circle cx="127" cy="10" r="3.5" fill="#9b6dff"/>
+    <text x="136" y="14"
+          font-family="monospace" font-size="9" fill="#8ba8c4">Zero-Trust</text>
+
+    <!-- Time Travel -->
+    <rect x="224" y="0" width="100" height="20" rx="3"
+          fill="#061420" stroke="#00d4ff50" stroke-width="0.8"/>
+    <circle cx="235" cy="10" r="3.5" fill="#00d4ff"/>
+    <text x="244" y="14"
+          font-family="monospace" font-size="9" fill="#8ba8c4">Time Travel</text>
+
+    <!-- Token Analytics -->
+    <rect x="332" y="0" width="122" height="20" rx="3"
+          fill="#061420" stroke="#ffb34750" stroke-width="0.8"/>
+    <circle cx="343" cy="10" r="3.5" fill="#ffb347"/>
+    <text x="352" y="14"
+          font-family="monospace" font-size="9" fill="#8ba8c4">Token Analytics</text>
+
+  </g>
+
+  <!-- Capability badges row 2 -->
+  <g transform="translate(70, 174)">
+
+    <!-- Anomaly Detection -->
+    <rect x="0" y="0" width="134" height="20" rx="3"
+          fill="#061420" stroke="#ff456050" stroke-width="0.8"/>
+    <circle cx="11" cy="10" r="3.5" fill="#ff4560"/>
+    <text x="20" y="14"
+          font-family="monospace" font-size="9" fill="#8ba8c4">Anomaly Detection</text>
+
+    <!-- Merkle Audit -->
+    <rect x="142" y="0" width="110" height="20" rx="3"
+          fill="#061420" stroke="#00d4ff40" stroke-width="0.8"/>
+    <circle cx="153" cy="10" r="3.5" fill="#00d4ff"/>
+    <text x="162" y="14"
+          font-family="monospace" font-size="9" fill="#8ba8c4">Merkle Audit</text>
+
+    <!-- Hot Patch -->
+    <rect x="260" y="0" width="92" height="20" rx="3"
+          fill="#061420" stroke="#ffb34750" stroke-width="0.8"/>
+    <circle cx="271" cy="10" r="3.5" fill="#ffb347"/>
+    <text x="280" y="14"
+          font-family="monospace" font-size="9" fill="#8ba8c4">Hot Patch</text>
+
+    <!-- SOC2 Ready -->
+    <rect x="360" y="0" width="94" height="20" rx="3"
+          fill="#061420" stroke="#00e5a050" stroke-width="0.8"/>
+    <circle cx="371" cy="10" r="3.5" fill="#00e5a0"/>
+    <text x="380" y="14"
+          font-family="monospace" font-size="9" fill="#8ba8c4">SOC2 Ready</text>
+
+  </g>
+
+  <!-- Outer border frame -->
+  <rect x="1" y="1" width="898" height="218" rx="6"
+        fill="none" stroke="#0d2a3d" stroke-width="1.5"/>
+  <rect x="2" y="2" width="896" height="216" rx="5"
+        fill="none" stroke="#00d4ff" stroke-width="0.5" stroke-opacity="0.15"/>
+
+</svg>
